@@ -27,7 +27,7 @@ In Lean so far: the first step, `S = B` exactly when the four faces have the sam
 
 The same computation in ℝⁿ gives: for a simplex, `S = B` if and only if all its facets have the same `(n−1)`-dimensional volume.
 
-- **Conjecture.** `S = B` does not require any symmetry. Among convex polyhedra with a given number of vertices, five or more, those with `S = B` form a set of codimension 3 (three real equations), and it contains polyhedra with no symmetry at all. Tetrahedra are the exception, since there equal face areas force a symmetry.
+- **Conjecture.** `S = B` does not require any symmetry. Among convex polyhedra with a given number of vertices, five or more, those with `S = B` form a set of codimension 3 (three real equations), and it contains polyhedra with no symmetry at all. Tetrahedra are the exception, since for them equal face areas force a symmetry.
 - **Question.** In ℝ⁴ and beyond, does a simplex whose facets all have the same volume always have a symmetry group fixing a single point, as in ℝ³? If not, such a simplex has `S = B` without the symmetry, and the tetrahedron is a low-dimensional accident. We have not searched the literature on simplices with facets of equal volume.
 
 ## Build
