@@ -17,7 +17,7 @@ plane. So `μHE[2]` restricted to the triangle is the image under `ι` of the ar
 planar triangle, and the centroids follow (`centroid_map`).
 -/
 
-open MeasureTheory Module
+open MeasureTheory Module Matrix
 
 @[expose] public noncomputable section
 
@@ -254,5 +254,27 @@ lemma det_pre_sq :
     EuclideanSpace.inner_eq_star_dotProduct]
   simp [Fin.sum_univ_two, dotProduct]
   ring
+
+include h in
+/-- `|det (preB, preC)|` is the norm of the cross product `(b - a) × (c - a)`. -/
+lemma abs_det_pre :
+    |LinearMap.det (planarLin (preB h) (preC h))| =
+      ‖(WithLp.toLp 2 ((b - a).ofLp ⨯₃ (c - a).ofLp) : E)‖ := by
+  rw [← abs_norm]
+  refine (sq_eq_sq_iff_abs_eq_abs _ _).1 ?_
+  rw [det_pre_sq h, EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq,
+    EuclideanSpace.norm_sq_eq, EuclideanSpace.inner_eq_star_dotProduct]
+  have := cross_dot_cross (b - a).ofLp (c - a).ofLp (b - a).ofLp (c - a).ofLp
+  simp only [dotProduct, Fin.sum_univ_three] at this
+  simp only [Real.norm_eq_abs, sq_abs, Fin.sum_univ_three, star_trivial, dotProduct]
+  nlinarith [this]
+
+include h in
+/-- **The area of a triangle in space**, under `μHE[2]`, in terms of the cross product. -/
+lemma hausdorff_triangle_cross :
+    (μHE[2] : Measure E) (convexHull ℝ {a, b, c}) =
+      ENNReal.ofReal ‖(WithLp.toLp 2 ((b - a).ofLp ⨯₃ (c - a).ofLp) : E)‖ *
+        volume stdTriangle := by
+  rw [hausdorff_triangle h, abs_det_pre h]
 
 end SymmetricCentroids
