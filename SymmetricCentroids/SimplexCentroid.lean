@@ -53,6 +53,14 @@ theorem centroid_map (μ : Measure (Space m)) [IsFiniteMeasure μ] (hμ : μ ≠
   rw [smul_add, smul_smul, inv_mul_cancel₀ hM0, one_smul]
   rfl
 
+/-- **Scaling.** A centroid ignores scaling the measure by a nonzero finite constant. -/
+theorem centroid_smul (μ : Measure (Space n)) {c : ENNReal} (hc0 : c ≠ 0) (hc : c ≠ ⊤) :
+    centroid (c • μ) = centroid μ := by
+  have hc' : c.toReal ≠ 0 := ENNReal.toReal_ne_zero.2 ⟨hc0, hc⟩
+  unfold centroid
+  rw [Measure.smul_apply, smul_eq_mul, ENNReal.toReal_mul, integral_smul_measure, smul_smul,
+    mul_inv, mul_right_comm, inv_mul_cancel₀ hc', one_mul]
+
 /-! ### The standard triangle -/
 
 /-- The point `(a, b)` of the plane. -/
