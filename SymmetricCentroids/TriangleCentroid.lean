@@ -204,4 +204,54 @@ theorem centroid_triangle :
   rw [planeEmbedding_apply, map_smul, map_add, hb, hc']
   module
 
+/-! ### The area of a triangle in space -/
+
+lemma det_planarLin (q₁ q₂ : Space 2) :
+    LinearMap.det (planarLin q₁ q₂) = q₁ 0 * q₂ 1 - q₁ 1 * q₂ 0 := by
+  rw [← LinearMap.det_toMatrix (EuclideanSpace.basisFun (Fin 2) ℝ).toBasis, Matrix.det_fin_two]
+  simp [LinearMap.toMatrix_apply, planarLin]
+  ring
+
+/-- The area of the planar triangle `0 q₁ q₂` is `|det (q₁, q₂)|` times that of the standard
+triangle. -/
+lemma volume_planarTriangle (hq : LinearIndependent ℝ ![q₁, q₂]) :
+    volume (convexHull ℝ ({0, q₁, q₂} : Set (Space 2))) =
+      ENNReal.ofReal |LinearMap.det (planarLin q₁ q₂)| * volume stdTriangle := by
+  have hmap := congrArg (fun μ : Measure (Space 2) => μ Set.univ) (map_stdTriangle_planarLin hq)
+  simp only [Measure.map_apply (planarLin q₁ q₂).continuous_of_finiteDimensional.measurable
+      MeasurableSet.univ, Set.preimage_univ, Measure.restrict_apply MeasurableSet.univ,
+      Set.univ_inter, Measure.smul_apply, smul_eq_mul] at hmap
+  have hdet : LinearMap.det (planarLin q₁ q₂) ≠ 0 := by
+    rw [Ne, LinearMap.det_eq_zero_iff_ker_ne_bot, not_not, LinearMap.ker_eq_bot]
+    exact planarLin_injective hq
+  rw [hmap, ← mul_assoc, ← ENNReal.ofReal_mul (abs_nonneg _), abs_inv,
+    mul_inv_cancel₀ (abs_ne_zero.2 hdet), ENNReal.ofReal_one, one_mul]
+
+include h in
+/-- **The area of a triangle in space**, under `μHE[2]`, is `|det (preB, preC)|` times the area of
+the standard triangle. -/
+lemma hausdorff_triangle :
+    (μHE[2] : Measure E) (convexHull ℝ {a, b, c}) =
+      ENNReal.ofReal |LinearMap.det (planarLin (preB h) (preC h))| * volume stdTriangle := by
+  have hm := congrArg (fun μ : Measure E => μ Set.univ) (map_planarTriangle h)
+  simp only [Measure.map_apply (isometry_planeEmbedding h).continuous.measurable
+      MeasurableSet.univ, Set.preimage_univ, Measure.restrict_apply MeasurableSet.univ,
+      Set.univ_inter] at hm
+  rw [← hm, volume_planarTriangle (linearIndependent_pre h)]
+
+include h in
+/-- The determinant of the planar preimages is Gram's: `det² = |b - a|² |c - a|² - ⟪b - a, c - a⟫²`. -/
+lemma det_pre_sq :
+    LinearMap.det (planarLin (preB h) (preC h)) ^ 2 =
+      ‖b - a‖ ^ 2 * ‖c - a‖ ^ 2 - inner ℝ (b - a) (c - a) ^ 2 := by
+  have hb : planeLin h (preB h) = b - a :=
+    eq_sub_of_add_eq (by have := planeEmbedding_preB h; rwa [planeEmbedding_apply] at this)
+  have hc : planeLin h (preC h) = c - a :=
+    eq_sub_of_add_eq (by have := planeEmbedding_preC h; rwa [planeEmbedding_apply] at this)
+  rw [← hb, ← hc, LinearIsometry.norm_map, LinearIsometry.norm_map, LinearIsometry.inner_map_map,
+    det_planarLin, EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq,
+    EuclideanSpace.inner_eq_star_dotProduct]
+  simp [Fin.sum_univ_two, dotProduct]
+  ring
+
 end SymmetricCentroids
