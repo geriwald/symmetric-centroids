@@ -1,10 +1,10 @@
 # symmetric-centroids
 
-A Lean 4 and Mathlib proof that the surface centroid `S` and the volume centroid `B` of a solid both lie in the set of points fixed by its symmetries. When that set is a single point, `S = B`.
+A Lean 4 and Mathlib proof that the surface centroid `S` and the volume centroid `B` of a solid in ℝⁿ both lie in the set of points fixed by its symmetries. When that set is a single point, `S = B`.
 
 The proof is elementary and needs no machine check. It is formalised here for fun, and to try Lean and Mathlib on a small, real statement.
 
-- `SymmetricCentroids.lean`: the definitions, the key lemma (an affine isometry that preserves a finite measure fixes its centroid), the theorem, its mirror corollary, and the trivial criterion for `S = B`.
+- `SymmetricCentroids.lean`: in ℝⁿ, `S` weighted by the `(n−1)`-dimensional Hausdorff measure of the boundary; the definitions, the key lemma (an affine isometry that preserves a finite measure fixes its centroid), the theorem, its mirror corollary, and the trivial criterion for `S = B`.
 - `SymmetricCentroids/SnubSolids.lean`: the two chiral snub solids, from their vertex coordinates. The snub cube turns onto itself by quarter turns about the `z` and `x` axes, the snub dodecahedron by half turns about the same axes; in each case the two rotations fix only the origin, so `S = B = 0`.
 - `SymmetricCentroids/Tetrahedron.lean`: on a tetrahedron, the area-weighted mean of the face centroids equals the vertex centroid exactly when the four faces have the same area, and a tetrahedron of nonzero volume with four faces of equal area has its opposite edges equal in pairs (a disphenoid), and conversely. Together: `S = B` exactly when the tetrahedron is a disphenoid.
 
@@ -15,7 +15,6 @@ The statements below are worked out by hand or expected, not checked in Lean.
 - **No symmetry condition is necessary.** The closed cone whose slant height is three times its base radius has `S = B`, yet its symmetries fix a whole axis: `S` sits at `(h/3)·s/(s + r)` and `B` at `h/4`. So does the square pyramid of base side `a` and height `√2·a`, whose lateral faces put `S` at `(2ℓh/3)/(2ℓ + a)`, `ℓ` being the slant height of a face. Checking either in Lean needs the area of a surface in space; this version of Mathlib normalises the Hausdorff measure, but has no area formula for a triangle or a cone in ℝ³ that we found.
 - **The theorem is sharp, presumably.** For every group of isometries whose fixed set is more than a point, there should be a solid with exactly those symmetries and `S ≠ B`. The cone, the pyramid, the frustum and the hemisphere are examples for some of those groups, not a proof for all.
 - **The meshes.** Every centre built from a mesh without favouring a direction (the mean of the vertices, of the triangles, `S`, `B`) is fixed by the symmetries that the mesh keeps, so all of them coincide when those symmetries fix a single point. The proof is the same; it is not written in Lean.
-- **Any dimension.** Nothing in the proof uses dimension 3. In ℝⁿ, `S` is weighted by the `(n−1)`-dimensional measure of the boundary, and the statement should carry over as is.
 
 ### Tetrahedra: the converse holds
 

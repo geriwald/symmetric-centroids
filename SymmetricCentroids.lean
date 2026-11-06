@@ -10,7 +10,7 @@ public import Mathlib
 /-!
 # Symmetric centroids
 
-If the symmetries of a solid `K ⊆ ℝ³` leave a single point fixed, the centroid `S`
+If the symmetries of a solid `K ⊆ ℝⁿ` leave a single point fixed, the centroid `S`
 of its surface and the centroid `B` of its volume coincide at that point.
 
 Every symmetry maps the solid onto itself, so it maps `S` to `S` and `B` to `B`; `S` and `B`
@@ -30,32 +30,40 @@ open MeasureTheory
 
 namespace SymmetricCentroids
 
-/-- Euclidean space ℝ³. -/
-abbrev E := EuclideanSpace ℝ (Fin 3)
+/-- Euclidean space ℝⁿ. -/
+abbrev Space (n : ℕ) := EuclideanSpace ℝ (Fin n)
 
-/-- The centroid of a measure: `(∫ x dμ) / μ(E)`. -/
-def centroid (μ : Measure E) : E := (μ Set.univ).toReal⁻¹ • ∫ x, x ∂μ
+/-- Euclidean space ℝ³, where the solids of the other files live. -/
+abbrev E := Space 3
+
+variable {n : ℕ}
+
+
+/-- The centroid of a measure: `(∫ x dμ) / μ(ℝⁿ)`. -/
+def centroid (μ : Measure (Space n)) : Space n := (μ Set.univ).toReal⁻¹ • ∫ x, x ∂μ
 
 /-- `B`, the centroid of the volume of `K`. -/
-def volCentroid (K : Set E) : E := centroid (volume.restrict K)
+def volCentroid (K : Set (Space n)) : Space n := centroid (volume.restrict K)
 
-/-- `S`, the centroid of the skin `∂K`, weighted by area
-(the 2-dimensional Hausdorff measure, normalised to agree with area). -/
-def surfCentroid (K : Set E) : E := centroid ((μHE[2] : Measure E).restrict (frontier K))
+/-- `S`, the centroid of the skin `∂K`, weighted by its `(n-1)`-dimensional measure (the
+Hausdorff measure, normalised to agree with area when `n = 3`). -/
+def surfCentroid (K : Set (Space n)) : Space n :=
+  centroid ((μHE[n - 1] : Measure (Space n)).restrict (frontier K))
 
 /-- A symmetry of `K`: an isometry of space that maps `K` onto itself. -/
-def IsSymmetry (K : Set E) (g : E ≃ᵃⁱ[ℝ] E) : Prop := g '' K = K
+def IsSymmetry (K : Set (Space n)) (g : Space n ≃ᵃⁱ[ℝ] Space n) : Prop := g '' K = K
 
 /-- An affine isometry is its linear part plus a translation. -/
-lemma apply_eq (g : E ≃ᵃⁱ[ℝ] E) (x : E) : g x = g.linearIsometryEquiv x + g 0 := by
+lemma apply_eq (g : Space n ≃ᵃⁱ[ℝ] Space n) (x : Space n) :
+    g x = g.linearIsometryEquiv x + g 0 := by
   have h := g.map_vadd 0 x
   simp only [vadd_eq_add, add_zero] at h
   exact h
 
 /-- Key lemma: an affine isometry that preserves a finite, nonzero measure with a first
 moment fixes the centroid of that measure. -/
-theorem centroid_fixed (μ : Measure E) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
-    (hint : Integrable (fun x : E => x) μ) (g : E ≃ᵃⁱ[ℝ] E) (hg : μ.map g = μ) :
+theorem centroid_fixed (μ : Measure (Space n)) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
+    (hint : Integrable (fun x : (Space n) => x) μ) (g : Space n ≃ᵃⁱ[ℝ] Space n) (hg : μ.map g = μ) :
     g (centroid μ) = centroid μ := by
   set m := (μ Set.univ).toReal with hm_def
   have hm : m ≠ 0 := by
@@ -79,24 +87,26 @@ theorem centroid_fixed (μ : Measure E) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
   conv_rhs => rw [hI]
   rw [smul_add, smul_smul, inv_mul_cancel₀ hm, one_smul]
 
-/-- An affine isometry of ℝ³ preserves volume. -/
-lemma measurePreserving_volume (g : E ≃ᵃⁱ[ℝ] E) : MeasurePreserving g volume volume := by
-  have h : (g : E → E) = (· + g 0) ∘ g.linearIsometryEquiv := funext (apply_eq g)
+/-- An affine isometry of ℝⁿ preserves volume. -/
+lemma measurePreserving_volume (g : Space n ≃ᵃⁱ[ℝ] Space n) :
+    MeasurePreserving g volume volume := by
+  have h : (g : (Space n) → (Space n)) = (· + g 0) ∘ g.linearIsometryEquiv := funext (apply_eq g)
   rw [h]
   exact (measurePreserving_add_right volume (g 0)).comp
     g.linearIsometryEquiv.measurePreserving
 
 /-- A measure-preserving isometry that maps `s` onto itself preserves `μ` restricted to `s`. -/
-lemma map_restrict (μ : Measure E) (g : E ≃ᵃⁱ[ℝ] E) (hp : MeasurePreserving g μ μ)
-    {s : Set E} (hs : g '' s = s) : (μ.restrict s).map g = μ.restrict s := by
+lemma map_restrict (μ : Measure (Space n)) (g : Space n ≃ᵃⁱ[ℝ] Space n)
+    (hp : MeasurePreserving g μ μ)
+    {s : Set (Space n)} (hs : g '' s = s) : (μ.restrict s).map g = μ.restrict s := by
   have := hp.restrict_image_emb g.toHomeomorph.measurableEmbedding s
   rw [hs] at this
   exact this.map_eq
 
 /-- The centroid of `μ` restricted to a compact set of finite, nonzero measure is fixed by
 every measure-preserving isometry that maps the set onto itself. -/
-lemma centroid_restrict_fixed (μ : Measure E) {s : Set E} (hs : IsCompact s)
-    (h₀ : μ s ≠ 0) (hfin : μ s ≠ ⊤) (g : E ≃ᵃⁱ[ℝ] E) (hp : MeasurePreserving g μ μ)
+lemma centroid_restrict_fixed (μ : Measure (Space n)) {s : Set (Space n)} (hs : IsCompact s)
+    (h₀ : μ s ≠ 0) (hfin : μ s ≠ ⊤) (g : Space n ≃ᵃⁱ[ℝ] Space n) (hp : MeasurePreserving g μ μ)
     (hgs : g '' s = s) : g (centroid (μ.restrict s)) = centroid (μ.restrict s) := by
   have : IsFiniteMeasure (μ.restrict s) := isFiniteMeasure_restrict.2 hfin
   obtain ⟨C, hC⟩ := hs.isBounded.exists_norm_le
@@ -106,39 +116,41 @@ lemma centroid_restrict_fixed (μ : Measure E) {s : Set E} (hs : IsCompact s)
       ((ae_restrict_iff' hs.isClosed.measurableSet).2 (Filter.Eventually.of_forall hC))
 
 /-- Every symmetry of a compact solid of nonzero volume fixes `B`. -/
-lemma volCentroid_fixed {K : Set E} (hK : IsCompact K) (hV : volume K ≠ 0)
-    {g : E ≃ᵃⁱ[ℝ] E} (hg : IsSymmetry K g) : g (volCentroid K) = volCentroid K :=
+lemma volCentroid_fixed {K : Set (Space n)} (hK : IsCompact K) (hV : volume K ≠ 0)
+    {g : Space n ≃ᵃⁱ[ℝ] Space n} (hg : IsSymmetry K g) : g (volCentroid K) = volCentroid K :=
   centroid_restrict_fixed volume hK hV hK.measure_lt_top.ne g (measurePreserving_volume g) hg
 
 /-- Every symmetry of a compact solid whose skin has finite, nonzero area fixes `S`. -/
-lemma surfCentroid_fixed {K : Set E} (hK : IsCompact K)
-    (hA₀ : μHE[2] (frontier K) ≠ 0) (hA : μHE[2] (frontier K) ≠ ⊤)
-    {g : E ≃ᵃⁱ[ℝ] E} (hg : IsSymmetry K g) : g (surfCentroid K) = surfCentroid K := by
+lemma surfCentroid_fixed {K : Set (Space n)} (hK : IsCompact K)
+    (hA₀ : μHE[n - 1] (frontier K) ≠ 0) (hA : μHE[n - 1] (frontier K) ≠ ⊤)
+    {g : Space n ≃ᵃⁱ[ℝ] Space n} (hg : IsSymmetry K g) : g (surfCentroid K) = surfCentroid K := by
   have hfr : IsCompact (frontier K) :=
     hK.of_isClosed_subset isClosed_frontier
       (frontier_subset_closure.trans hK.isClosed.closure_subset)
   have hgK : g '' frontier K = frontier K := by
-    rw [show (g : E → E) = g.toHomeomorph from rfl, g.toHomeomorph.image_frontier]
+    rw [show (g : (Space n) → (Space n)) = g.toHomeomorph from rfl, g.toHomeomorph.image_frontier]
     exact congrArg frontier hg
-  exact centroid_restrict_fixed μHE[2] hfr hA₀ hA g
-    (g.coe_toIsometryEquiv ▸ g.toIsometryEquiv.measurePreserving_euclideanHausdorffMeasure 2) hgK
+  exact centroid_restrict_fixed μHE[n - 1] hfr hA₀ hA g
+    (g.coe_toIsometryEquiv ▸
+      g.toIsometryEquiv.measurePreserving_euclideanHausdorffMeasure (n - 1)) hgK
 
 /-- The points fixed by every symmetry of `K`. -/
-def fixedSet (K : Set E) : Set E := {x | ∀ g, IsSymmetry K g → g x = x}
+def fixedSet (K : Set (Space n)) : Set (Space n) := {x | ∀ g, IsSymmetry K g → g x = x}
 
 /-- **Generalisation.** `S` and `B` both lie in the set of points fixed by every symmetry
 of `K`. On a solid of revolution that set is the axis; on a hull with one plane of symmetry it
 is that plane; on a solid with no symmetry it is the whole space. -/
-theorem centroids_mem_fixedSet (K : Set E) (hK : IsCompact K) (hV : volume K ≠ 0)
-    (hA₀ : μHE[2] (frontier K) ≠ 0) (hA : μHE[2] (frontier K) ≠ ⊤) :
+theorem centroids_mem_fixedSet (K : Set (Space n)) (hK : IsCompact K) (hV : volume K ≠ 0)
+    (hA₀ : μHE[n - 1] (frontier K) ≠ 0) (hA : μHE[n - 1] (frontier K) ≠ ⊤) :
     surfCentroid K ∈ fixedSet K ∧ volCentroid K ∈ fixedSet K :=
   ⟨fun _ hg => surfCentroid_fixed hK hA₀ hA hg, fun _ hg => volCentroid_fixed hK hV hg⟩
 
 /-- **Symmetric centroids.** If the symmetries of a solid `K` fix at most one point `c`,
 then its surface centroid `S` and its volume centroid `B` are both `c`. -/
-theorem centroids_eq_of_unique_fixed_point (K : Set E) (hK : IsCompact K) (hV : volume K ≠ 0)
-    (hA₀ : μHE[2] (frontier K) ≠ 0) (hA : μHE[2] (frontier K) ≠ ⊤)
-    (c : E) (huniq : ∀ x ∈ fixedSet K, x = c) :
+theorem centroids_eq_of_unique_fixed_point (K : Set (Space n)) (hK : IsCompact K)
+    (hV : volume K ≠ 0)
+    (hA₀ : μHE[n - 1] (frontier K) ≠ 0) (hA : μHE[n - 1] (frontier K) ≠ ⊤)
+    (c : Space n) (huniq : ∀ x ∈ fixedSet K, x = c) :
     surfCentroid K = c ∧ volCentroid K = c :=
   have h := centroids_mem_fixedSet K hK hV hA₀ hA
   ⟨huniq _ h.1, huniq _ h.2⟩
@@ -146,9 +158,10 @@ theorem centroids_eq_of_unique_fixed_point (K : Set E) (hK : IsCompact K) (hV : 
 /-- **Mirror.** If the reflection in an affine subspace `P` (a plane, a line, a point) maps `K`
 onto itself, `S` and `B` both lie in `P`. A hull symmetric port and starboard has `S` and `B` in
 its plane of symmetry, so `S - B` has no athwartships component. -/
-theorem centroids_mem_of_reflection (K : Set E) (hK : IsCompact K) (hV : volume K ≠ 0)
-    (hA₀ : μHE[2] (frontier K) ≠ 0) (hA : μHE[2] (frontier K) ≠ ⊤)
-    (P : AffineSubspace ℝ E) [Nonempty P] (hP : IsSymmetry K (EuclideanGeometry.reflection P)) :
+theorem centroids_mem_of_reflection (K : Set (Space n)) (hK : IsCompact K) (hV : volume K ≠ 0)
+    (hA₀ : μHE[n - 1] (frontier K) ≠ 0) (hA : μHE[n - 1] (frontier K) ≠ ⊤)
+    (P : AffineSubspace ℝ (Space n)) [Nonempty P]
+    (hP : IsSymmetry K (EuclideanGeometry.reflection P)) :
     surfCentroid K ∈ P ∧ volCentroid K ∈ P := by
   have h := centroids_mem_fixedSet K hK hV hA₀ hA
   exact ⟨(EuclideanGeometry.reflection_eq_self_iff _).1 (h.1 _ hP),
@@ -156,8 +169,8 @@ theorem centroids_mem_of_reflection (K : Set E) (hK : IsCompact K) (hV : volume 
 
 /-- A finite, nonzero measure has its centroid at `c` exactly when its first moment about `c`
 is zero. -/
-lemma centroid_eq_iff (μ : Measure E) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
-    (hint : Integrable (fun x : E => x) μ) (c : E) :
+lemma centroid_eq_iff (μ : Measure (Space n)) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
+    (hint : Integrable (fun x : (Space n) => x) μ) (c : Space n) :
     centroid μ = c ↔ ∫ x, (x - c) ∂μ = 0 := by
   have hm : (μ Set.univ).toReal ≠ 0 := by
     rw [ENNReal.toReal_ne_zero]
@@ -168,14 +181,14 @@ lemma centroid_eq_iff (μ : Measure E) [IsFiniteMeasure μ] (hμ : μ ≠ 0)
 
 /-- **The trivial criterion.** `S = B` exactly when the first moment of the skin about `B` is
 zero: `∫_∂K (x - B) dA = 0`. True, and no more than the definition of `S`. -/
-theorem surfCentroid_eq_volCentroid_iff (K : Set E) (hK : IsCompact K)
-    (hA₀ : μHE[2] (frontier K) ≠ 0) (hA : μHE[2] (frontier K) ≠ ⊤) :
+theorem surfCentroid_eq_volCentroid_iff (K : Set (Space n)) (hK : IsCompact K)
+    (hA₀ : μHE[n - 1] (frontier K) ≠ 0) (hA : μHE[n - 1] (frontier K) ≠ ⊤) :
     surfCentroid K = volCentroid K ↔
-      ∫ x in frontier K, (x - volCentroid K) ∂(μHE[2] : Measure E) = 0 := by
+      ∫ x in frontier K, (x - volCentroid K) ∂(μHE[n - 1] : Measure (Space n)) = 0 := by
   have hfr : IsCompact (frontier K) :=
     hK.of_isClosed_subset isClosed_frontier
       (frontier_subset_closure.trans hK.isClosed.closure_subset)
-  have : IsFiniteMeasure ((μHE[2] : Measure E).restrict (frontier K)) :=
+  have : IsFiniteMeasure ((μHE[n - 1] : Measure (Space n)).restrict (frontier K)) :=
     isFiniteMeasure_restrict.2 hA
   obtain ⟨C, hC⟩ := hfr.isBounded.exists_norm_le
   refine centroid_eq_iff _ ?_ ?_ _
