@@ -41,4 +41,23 @@ lemma hausdorff_face (hv : AffineIndependent ℝ v) (i : Fin 4) :
     ENNReal.toReal_mul, ENNReal.toReal_ofReal (norm_nonneg _), faceArea]
   ring
 
+/-- **On a tetrahedron, `S = B` exactly when it is a disphenoid**, `S` and `B` being the true
+centroids of the solid: of its frontier under the area measure `μHE[2]`, and of its volume. -/
+theorem surfCentroid_eq_volCentroid_iff_disphenoid (hv : AffineIndependent ℝ v)
+    (hA : ∀ i, 0 < faceArea v i) (hvol : tripleProduct v ≠ 0) :
+    surfCentroid (solid v) = volCentroid (solid v) ↔
+      dist (v 0) (v 1) = dist (v 2) (v 3) ∧ dist (v 0) (v 2) = dist (v 1) (v 3) ∧
+        dist (v 0) (v 3) = dist (v 1) (v 2) := by
+  have hK : 0 < (volume stdTriangle).toReal :=
+    ENNReal.toReal_pos volume_stdTriangle_ne_zero isCompact_stdTriangle.measure_lt_top.ne
+  have hS : surfCentroid (solid v) = weightedCentroid v (faceArea v) := by
+    rw [surfCentroid_solid hv]
+    change weightedCentroid v (fun i => ((μHE[2] : Measure E) (face v i)).toReal) = _
+    simp only [hausdorff_face hv]
+    exact weightedCentroid_const_mul v (faceArea v) (by positivity)
+  have hB : volCentroid (solid v) = vertexCentroid v := by
+    rw [volCentroid_solid hv, vertexCentroid]; norm_num
+  rw [hS, hB]
+  exact centroid_eq_iff_disphenoid v hv hA hvol
+
 end SymmetricCentroids.Tetrahedron
