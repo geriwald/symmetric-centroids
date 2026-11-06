@@ -240,7 +240,8 @@ lemma hausdorff_triangle :
   rw [← hm, volume_planarTriangle (linearIndependent_pre h)]
 
 include h in
-/-- The determinant of the planar preimages is Gram's: `det² = |b - a|² |c - a|² - ⟪b - a, c - a⟫²`. -/
+/-- The determinant of the planar preimages is Gram's:
+`det² = |b - a|² |c - a|² - ⟪b - a, c - a⟫²`. -/
 lemma det_pre_sq :
     LinearMap.det (planarLin (preB h) (preC h)) ^ 2 =
       ‖b - a‖ ^ 2 * ‖c - a‖ ^ 2 - inner ℝ (b - a) (c - a) ^ 2 := by
