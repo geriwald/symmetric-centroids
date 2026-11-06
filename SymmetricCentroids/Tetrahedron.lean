@@ -21,6 +21,9 @@ face areas, and the vertex centroid is the mean of the four vertices.
 * `disphenoid_of_equal_areas`: a tetrahedron of nonzero volume whose four faces have the same
   area has its opposite edges equal in pairs, that is, it is a disphenoid.
 * `disphenoid_of_centroid_eq`: the two together, `S = B` makes a disphenoid.
+* `equal_areas_of_disphenoid`: conversely, a disphenoid has four faces of equal area, since each
+  face has the same three side lengths and Heron's formula follows from Lagrange's identity.
+* `centroid_eq_iff_disphenoid`: hence `S = B` exactly when the tetrahedron is a disphenoid.
 
 Not proved here: that the weighted mean is the `surfCentroid` of the solid tetrahedron, its
 centroid under the area measure `μHE[2]`, and that the vertex centroid is its `volCentroid`.
@@ -232,5 +235,72 @@ theorem disphenoid_of_centroid_eq (hv : AffineIndependent ℝ v) (hA : ∀ i, 0 
     dist (v 0) (v 1) = dist (v 2) (v 3) ∧ dist (v 0) (v 2) = dist (v 1) (v 3) ∧
       dist (v 0) (v 3) = dist (v 1) (v 2) :=
   disphenoid_of_equal_areas v hvol ((surfaceCentroid_eq_iff v hv hA).1 h)
+
+/-! ### A disphenoid has four faces of equal area -/
+
+/-- Heron's formula, in squares: four times the squared area of a triangle whose sides have squared
+lengths `x`, `y`, `z`. -/
+def heron (x y z : ℝ) : ℝ := x * y - ((x + y - z) / 2) ^ 2
+
+/-- The squared length of a cross product of two sides depends only on the three sides. -/
+lemma cross_sq_heron (p₀ p₁ p₂ : Fin 3 → ℝ) :
+    ((p₁ - p₀) ⨯₃ (p₂ - p₀)) ⬝ᵥ ((p₁ - p₀) ⨯₃ (p₂ - p₀)) =
+      heron ((p₁ - p₀) ⬝ᵥ (p₁ - p₀)) ((p₂ - p₀) ⬝ᵥ (p₂ - p₀)) ((p₂ - p₁) ⬝ᵥ (p₂ - p₁)) := by
+  simp only [heron, cross_apply, dotProduct, Fin.sum_univ_three]
+  simp
+  ring
+
+/-- **A disphenoid has four faces of equal area.** When the opposite edges are equal in pairs,
+every face has the same three side lengths, hence the same area. -/
+theorem equal_areas_of_disphenoid
+    (h₁ : dist (v 0) (v 1) = dist (v 2) (v 3)) (h₂ : dist (v 0) (v 2) = dist (v 1) (v 3))
+    (h₃ : dist (v 0) (v 3) = dist (v 1) (v 2)) :
+    ∀ i j, faceArea v i = faceArea v j := by
+  set x := fun i => (v i).ofLp
+  have dd : ∀ i j, (x i - x j) ⬝ᵥ (x i - x j) = dist (v i) (v j) ^ 2 :=
+    fun i j => (dist_sq (v i) (v j)).symm
+  have f0 : (2 * faceArea v 0) ^ 2 = heron (dist (v 2) (v 1) ^ 2) (dist (v 3) (v 1) ^ 2)
+      (dist (v 3) (v 2) ^ 2) := by
+    rw [← dd, ← dd, ← dd]; exact (faceArea_sq v 0).trans (cross_sq_heron (x 1) (x 2) (x 3))
+  have f1 : (2 * faceArea v 1) ^ 2 = heron (dist (v 2) (v 0) ^ 2) (dist (v 3) (v 0) ^ 2)
+      (dist (v 3) (v 2) ^ 2) := by
+    rw [← dd, ← dd, ← dd]; exact (faceArea_sq v 1).trans (cross_sq_heron (x 0) (x 2) (x 3))
+  have f2 : (2 * faceArea v 2) ^ 2 = heron (dist (v 1) (v 0) ^ 2) (dist (v 3) (v 0) ^ 2)
+      (dist (v 3) (v 1) ^ 2) := by
+    rw [← dd, ← dd, ← dd]; exact (faceArea_sq v 2).trans (cross_sq_heron (x 0) (x 1) (x 3))
+  have f3 : (2 * faceArea v 3) ^ 2 = heron (dist (v 1) (v 0) ^ 2) (dist (v 2) (v 0) ^ 2)
+      (dist (v 2) (v 1) ^ 2) := by
+    rw [← dd, ← dd, ← dd]; exact (faceArea_sq v 3).trans (cross_sq_heron (x 0) (x 1) (x 2))
+  simp only [dist_comm (v 2) (v 1), dist_comm (v 3) (v 1), dist_comm (v 3) (v 2),
+    dist_comm (v 2) (v 0), dist_comm (v 3) (v 0), dist_comm (v 1) (v 0)] at f0 f1 f2 f3
+  rw [← h₁, ← h₂, ← h₃] at f0
+  rw [← h₁] at f1
+  rw [← h₂] at f2
+  rw [← h₃] at f3
+  have hsq : ∀ i, (2 * faceArea v i) ^ 2 = (2 * faceArea v 3) ^ 2 := by
+    intro i; fin_cases i
+    · change (2 * faceArea v 0) ^ 2 = _
+      rw [f0, f3]; simp only [heron]; ring
+    · change (2 * faceArea v 1) ^ 2 = _
+      rw [f1, f3]; simp only [heron]; ring
+    · change (2 * faceArea v 2) ^ 2 = _
+      rw [f2, f3]; simp only [heron]; ring
+    · rfl
+  have nonneg : ∀ i, 0 ≤ 2 * faceArea v i := fun i => by
+    simp only [faceArea]; positivity
+  intro i j
+  have hi := (pow_left_inj₀ (nonneg i) (nonneg 3) two_ne_zero).1 (hsq i)
+  have hj := (pow_left_inj₀ (nonneg j) (nonneg 3) two_ne_zero).1 (hsq j)
+  linarith
+
+/-- **`S = B` exactly when the tetrahedron is a disphenoid**, for a tetrahedron of nonzero volume
+whose faces have positive area, `S` being the area-weighted mean of the face centroids. -/
+theorem centroid_eq_iff_disphenoid (hv : AffineIndependent ℝ v) (hA : ∀ i, 0 < faceArea v i)
+    (hvol : tripleProduct v ≠ 0) :
+    weightedCentroid v (faceArea v) = vertexCentroid v ↔
+      dist (v 0) (v 1) = dist (v 2) (v 3) ∧ dist (v 0) (v 2) = dist (v 1) (v 3) ∧
+        dist (v 0) (v 3) = dist (v 1) (v 2) :=
+  ⟨disphenoid_of_centroid_eq v hv hA hvol, fun ⟨h₁, h₂, h₃⟩ =>
+    (surfaceCentroid_eq_iff v hv hA).2 (equal_areas_of_disphenoid v h₁ h₂ h₃)⟩
 
 end SymmetricCentroids.Tetrahedron
