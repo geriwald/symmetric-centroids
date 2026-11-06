@@ -6,7 +6,7 @@ The proof is elementary and needs no machine check. It is formalised here for fu
 
 - `SymmetricCentroids.lean`: the definitions, the key lemma (an affine isometry that preserves a finite measure fixes its centroid), the theorem, its mirror corollary, and the trivial criterion for `S = B`.
 - `SymmetricCentroids/SnubSolids.lean`: the two chiral snub solids, from their vertex coordinates. The snub cube turns onto itself by quarter turns about the `z` and `x` axes, the snub dodecahedron by half turns about the same axes; in each case the two rotations fix only the origin, so `S = B = 0`.
-- `SymmetricCentroids/Tetrahedron.lean`: on a tetrahedron, the area-weighted mean of the face centroids equals the vertex centroid exactly when the four faces have the same area. The proof holds for any positive weights; affine independence of the vertices does the work.
+- `SymmetricCentroids/Tetrahedron.lean`: on a tetrahedron, the area-weighted mean of the face centroids equals the vertex centroid exactly when the four faces have the same area, and a tetrahedron of nonzero volume with four faces of equal area has its opposite edges equal in pairs (a disphenoid). Together: `S = B` makes a disphenoid.
 
 ## What is not proved, and what could follow
 
@@ -21,7 +21,7 @@ The statements below are worked out by hand or expected, not checked in Lean.
 
 For a tetrahedron the converse is true. `B` is the mean of the four vertices, and the centroid of a face is `(4B − v)/3`, `v` being the opposite vertex. Hence `S = B` exactly when `B = Σ A_f v_f / Σ A_f`, the weights being the areas of the opposite faces. Barycentric coordinates are unique, so `S = B` exactly when the four faces have the same area. A tetrahedron with four faces of equal area is a disphenoid: its opposite edges are equal in pairs, and its three half turns about perpendicular axes fix only its centre. So on tetrahedra, `S = B` if and only if the symmetries fix a single point.
 
-In Lean so far: the first step, `S = B` exactly when the four faces have the same area, for `S` written as the area-weighted mean of the face centroids (`Tetrahedron.lean`). Not yet in Lean: that this mean is the `surfCentroid` of the solid, and that equal face areas make a disphenoid.
+In Lean (`Tetrahedron.lean`), for `S` written as the area-weighted mean of the face centroids: `S = B` exactly when the four faces have the same area, and equal face areas make a disphenoid. The second step uses the face normals: they have the same length and sum to zero, so `nₐ·n_b = n_c·n_d`; the cross product of two normals is their common edge times the triple product, and Lagrange's identity then makes opposite edges equal. Not yet in Lean: that this mean is the `surfCentroid` of the solid, and that a disphenoid has three half turns fixing only its centre.
 
 ### A conjecture, and a question
 
