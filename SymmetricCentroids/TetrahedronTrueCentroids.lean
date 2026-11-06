@@ -19,7 +19,7 @@ The area `μHE[2]` of each face is its `faceArea` times a constant common to the
 weighted mean does not move when every weight is scaled by the same constant.
 -/
 
-open MeasureTheory
+open MeasureTheory Matrix
 
 @[expose] public noncomputable section
 
@@ -41,10 +41,33 @@ lemma hausdorff_face (hv : AffineIndependent ℝ v) (i : Fin 4) :
     ENNReal.toReal_mul, ENNReal.toReal_ofReal (norm_nonneg _), faceArea]
   ring
 
+/-- The determinant of the edge map is the triple product of the edges. -/
+lemma det_edgeLin_eq_tripleProduct (v : Fin 4 → E) :
+    LinearMap.det (edgeLin v : Space 3 →ₗ[ℝ] Space 3) = tripleProduct v := by
+  rw [← LinearMap.det_toMatrix (EuclideanSpace.basisFun (Fin 3) ℝ).toBasis, Matrix.det_fin_three]
+  simp [LinearMap.toMatrix_apply, edgeLin, tripleProduct, cross_apply, dotProduct,
+    Fin.sum_univ_three]
+  ring
+
+/-- A tetrahedron that is not flat has a nonzero triple product. -/
+lemma tripleProduct_ne_zero (hv : AffineIndependent ℝ v) : tripleProduct v ≠ 0 :=
+  det_edgeLin_eq_tripleProduct v ▸ det_edgeLin_ne_zero hv
+
+/-- A tetrahedron that is not flat has faces of positive area. -/
+lemma faceArea_pos (hv : AffineIndependent ℝ v) (i : Fin 4) : 0 < faceArea v i := by
+  have h := face_edges_linearIndependent hv i
+  have hdet : LinearMap.det (planarLin (preB h) (preC h)) ≠ 0 := by
+    rw [Ne, LinearMap.det_eq_zero_iff_ker_ne_bot, not_not, LinearMap.ker_eq_bot]
+    exact planarLin_injective (linearIndependent_pre h)
+  have hn := abs_det_pre h
+  rw [faceArea]
+  have : 0 < |LinearMap.det (planarLin (preB h) (preC h))| := abs_pos.2 hdet
+  rw [hn] at this
+  exact div_pos this two_pos
+
 /-- **On a tetrahedron, `S = B` exactly when it is a disphenoid**, `S` and `B` being the true
 centroids of the solid: of its frontier under the area measure `μHE[2]`, and of its volume. -/
-theorem surfCentroid_eq_volCentroid_iff_disphenoid (hv : AffineIndependent ℝ v)
-    (hA : ∀ i, 0 < faceArea v i) (hvol : tripleProduct v ≠ 0) :
+theorem surfCentroid_eq_volCentroid_iff_disphenoid (hv : AffineIndependent ℝ v) :
     surfCentroid (solid v) = volCentroid (solid v) ↔
       dist (v 0) (v 1) = dist (v 2) (v 3) ∧ dist (v 0) (v 2) = dist (v 1) (v 3) ∧
         dist (v 0) (v 3) = dist (v 1) (v 2) := by
@@ -58,6 +81,6 @@ theorem surfCentroid_eq_volCentroid_iff_disphenoid (hv : AffineIndependent ℝ v
   have hB : volCentroid (solid v) = vertexCentroid v := by
     rw [volCentroid_solid hv, vertexCentroid]; norm_num
   rw [hS, hB]
-  exact centroid_eq_iff_disphenoid v hv hA hvol
+  exact centroid_eq_iff_disphenoid v hv (faceArea_pos hv) (tripleProduct_ne_zero hv)
 
 end SymmetricCentroids.Tetrahedron
