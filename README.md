@@ -23,12 +23,17 @@ For a tetrahedron the converse is true. `B` is the mean of the four vertices, an
 
 In Lean (`Tetrahedron.lean`), for `S` written as the area-weighted mean of the face centroids: `S = B` exactly when the four faces have the same area, and equal face areas make a disphenoid. The second step uses the face normals: they have the same length and sum to zero, so `nₐ·n_b = n_c·n_d`; the cross product of two normals is their common edge times the triple product, and Lagrange's identity then makes opposite edges equal. Conversely, a disphenoid has four faces of equal area: each face has the same three side lengths, and Heron's formula follows from Lagrange's identity. So `S = B` exactly when the tetrahedron is a disphenoid (`centroid_eq_iff_disphenoid`). Not yet in Lean: that this mean is the `surfCentroid` of the solid, and that a disphenoid has three half turns fixing only its centre.
 
-### A conjecture, and a question
+### A conjecture, and a question, with numerical evidence
 
-The same computation in ℝⁿ gives: for a simplex, `S = B` if and only if all its facets have the same `(n−1)`-dimensional volume.
+The same computation in ℝⁿ gives: for a simplex, `S = B` if and only if all its facets have the same `(n−1)`-dimensional volume. This is known: the incenter and the centroid of a simplex coincide exactly when it is equiareal (Edmonds, Hajja and Martini, *Coincidences of simplex centers and related facial structures*, arXiv:math/0411093, 2004, Theorem 3.2 (iii)). The tetrahedron case is classical; McMullen studied simplices with facets of equal volume (*Simplices with equiareal faces*, Discrete Comput. Geom. 24, 2000).
 
 - **Conjecture.** `S = B` does not require any symmetry. Among convex polyhedra with a given number of vertices, five or more, those with `S = B` form a set of codimension 3 (three real equations), and it contains polyhedra with no symmetry at all. Tetrahedra are the exception, since for them equal face areas force a symmetry.
-- **Question.** In ℝ⁴ and beyond, does a simplex whose facets all have the same volume always have a symmetry group fixing a single point, as in ℝ³? If not, such a simplex has `S = B` without the symmetry, and the tetrahedron is a low-dimensional accident. We have not searched the literature on simplices with facets of equal volume.
+  *Evidence:* `numerics/s_equals_b_without_symmetry.py` starts from the square pyramid of height `√2·a`, moves the four base vertices at random and solves `S = B` for the apex. In 8 of 20 trials it finds a convex polyhedron with five vertices, no symmetry (the only distance-preserving permutation of the vertices is the identity) and `|S − B|` below `1e-16`. The Jacobian of `S − B` in the apex has rank 3 at those points, so by the implicit function theorem the set where `S = B` is, near each of them, a submanifold of codimension 3. This is numerical evidence, not a proof.
+- **Question, answered numerically.** In ℝ⁴, does a simplex whose facets all have the same volume always have a symmetry fixing a single point, as in ℝ³? No, numerically: `numerics/equiareal_simplex_without_symmetry.py` moves one vertex of a random 4-simplex to make the five facet volumes equal, and in 8 of 20 trials the result has no symmetry, with facet volumes equal to `1e-15` and `|S − B|` below `1e-15`. So a 4-simplex can have `S = B` without any symmetry, and the tetrahedron is a low-dimensional accident. Edmonds, Hajja and Martini already show equiareal 4-simplices that are not equifacetal (Theorem 4.3); we did not find in the literature an equiareal simplex shown to have no symmetry at all.
+
+## Numerics
+
+The two scripts in `numerics/` need Python 3 with NumPy and SciPy: `python3 numerics/s_equals_b_without_symmetry.py [trials] [seed]`.
 
 ## Build
 
