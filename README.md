@@ -4,6 +4,8 @@ A Lean 4 and Mathlib proof that the surface centroid `S` and the volume centroid
 
 The proof is elementary and needs no machine check. It is formalised here for fun, and to try Lean and Mathlib on a small, real statement.
 
+The proofs, here and in the note, and this formalisation were worked out with extensive help from Claude, an AI model made by Anthropic, and the author does not master every proof.
+
 The note [*Symmetric centroids*](https://barycentre.scatteredstack.com/symmetric-centroids.pdf) states and proves everything below, including what is not in Lean. The explorer [Barycentre](https://barycentre.scatteredstack.com) computes `S`, `B` and the symmetries of many solids.
 
 - `SymmetricCentroids.lean`: in ℝⁿ, `S` weighted by the `(n−1)`-dimensional Hausdorff measure of the boundary; the definitions, the key lemma (an affine isometry that preserves a finite measure fixes its centroid), the theorem, its mirror corollary, and the trivial criterion for `S = B`.
@@ -20,7 +22,7 @@ The note [*Symmetric centroids*](https://barycentre.scatteredstack.com/symmetric
 The note proves the statements below by hand.
 
 - **The cone.** The closed cone whose slant height is three times its base radius has `S = B`, yet its symmetries fix a whole axis. So does the square pyramid of base side `a` and height `√2·a`, which `PyramidCentroid.lean` proves in Lean with base side `√2` and height `2`. The cone stays outside Lean, because we found no area formula for curved surfaces in this version of Mathlib.
-- **Solids circumscribing a sphere** (Proposition 7, Corollary 8). If every tangent plane of the skin touches a sphere of centre `I`, then `B − I = ¾(S − I)`, so `S = B` exactly when `I = B`. A right cone, or a right pyramid on a regular base, has `S = B` exactly when its lateral area is three times its base area.
+- **Circumsolids** (Proposition 7, Corollary 8). A circumsolid, in the word of Apostol and Mnatsakanian, is a solid every tangent plane of whose skin touches a sphere, of centre `I`. Then `B − I = ¾(S − I)`, so `S = B` exactly when `I = B`. A right cone, or a right pyramid on a regular base, has `S = B` exactly when its lateral area is three times its base area.
 - **Section 6, Propositions 11 to 15.** For every `N ≥ 5` there is a convex polyhedron with `N` vertices, `S = B` and no symmetry other than the identity, a pyramid (11). Turning a piece with a rotation axis keeps `S` and `B` (12), so the gyrate rhombicosidodecahedra J72 to J75 have `S = B` (13). `S − B` is a multiple of the covariance, over the skin, between the position and the distance from `B` to the tangent plane (14). The theorem is sharp: for each group of isometries that fixes more than one point, except the rotations about an axis alone, which are the group of no solid, a convex solid has exactly that group and `S ≠ B` (15).
 - **The meshes, for `B`.** `MeshCentres.lean` covers the vertex mean, the triangle mean and the area-weighted mean of a mesh. The volume centroid of a mesh, from signed tetrahedra, is a weighted mean too, but its weights depend on the orientation and on a reference point, and it is not written in Lean.
 
